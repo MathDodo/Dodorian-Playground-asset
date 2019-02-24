@@ -1,19 +1,22 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using Dodorian.Singleton;
 using System.Collections.Generic;
-using System;
+using System.IO;
+using System.Linq;
 
 [CreateAssetMenu(fileName = "PlaygroundManager", menuName = "Playground/PlaygroundManager", order = 1)]
 public sealed class PlaygroundManager : RSingletonSO<PlaygroundManager>
 {
 #if UNITY_EDITOR
 
-    [SerializeField]
-    private TextAsset[] _setupAssets;
-
+    [HideInInspector]
     public List<NodeTree> _NodeTrees;
 
 #endif
+
+    [SerializeField, ReadOnly]
+    private EntitySetupCollection _setupAssets;
 
     private Dictionary<string, string> _setups;
     private Dictionary<string, Type> _entityTypes;
@@ -38,18 +41,12 @@ public sealed class PlaygroundManager : RSingletonSO<PlaygroundManager>
         _entityTypes = new Dictionary<string, Type>();
         _entityComponentMethods = new Dictionary<Type, Dictionary<Methods, System.Reflection.MethodInfo>>();
 
-        _entityComponentMethods.Add(typeof(EntityComponent), new Dictionary<Methods, System.Reflection.MethodInfo>());
-        _entityComponentMethods[typeof(EntityComponent)].Add(Methods.Init, typeof(EntityComponent).GetMethod("Init", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic));
+        _entityComponentMethods.Add(typeof(EntityNode), new Dictionary<Methods, System.Reflection.MethodInfo>());
+        _entityComponentMethods[typeof(EntityNode)].Add(Methods.Init, typeof(EntityNode).GetMethod("Init", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic));
 
-        var setupAssets = Resources.LoadAll<TextAsset>("PlaygroundSetups");
-
-#if UNITY_EDITOR
-        _setupAssets = setupAssets;
-#endif
-
-        for (int i = 0; i < setupAssets.Length; i++)
+        for (int i = 0; i < _setupAssets.Length; i++)
         {
-            _setups.Add(setupAssets[i].name, setupAssets[i].text);
+            _setups.Add(_setupAssets[i].Item1, _setupAssets[i].Item2);
         }
     }
 
@@ -90,4 +87,43 @@ public sealed class PlaygroundManager : RSingletonSO<PlaygroundManager>
 
         return null;
     }
+
+#if UNITY_EDITOR
+
+    public void AddEntitySetup(TextAsset asset)
+    {
+        _setupAssets.AddEntitySetup(asset);
+    }
+
+    /// <summary>
+    /// This method is called in the editor automaticaly if this method is in a class which derives from MonoBehaviour or a class which derives from InspectedSO
+    /// </summary>
+    private void OnInspect()
+    {
+        var assets = Directory.GetFiles(Application.dataPath + "/Dodorian/Playground/Editor/EntitySetups").Where(s => !s.Contains(".meta")).ToArray();
+
+        _setupAssets.Clear();
+
+        for (int i = 0; i < assets.Length; i++)
+        {
+            TextAsset ta = null;
+
+            try
+            {
+                ta = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>("Assets" + assets[i].Split(new string[1] { "/Assets" }, StringSplitOptions.None)[1]);
+            }
+            catch
+            {
+            }
+
+            if (ta != null)
+            {
+                _setupAssets.AddEntitySetup(ta);
+            }
+        }
+
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+
+#endif
 }

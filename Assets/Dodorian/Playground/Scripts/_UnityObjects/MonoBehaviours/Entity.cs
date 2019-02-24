@@ -6,7 +6,9 @@ public sealed class Entity : MonoBehaviour
 {
     private Action<float> _updates;
     private Action<float> _fixedUpdates;
-    private List<EntityComponent> _components;
+    private List<EntityNode> _components;
+    private Action<EntityNode> _onNodeAdd;
+    private Action<EntityNode> _onNodeRemove;
 
     [ReadOnly]
     public string _Name;
@@ -22,7 +24,7 @@ public sealed class Entity : MonoBehaviour
         _Transform = transform;
         _GameObject = gameObject;
 
-        _components = new List<EntityComponent>();
+        _components = new List<EntityNode>();
 
         var manager = PlaygroundManager.Instance;
 
@@ -30,9 +32,9 @@ public sealed class Entity : MonoBehaviour
 
         InvokeBaseInit(manager);
 
-        InvokeInit(manager);
+        AssignMethodCalls(manager);
 
-        SetupUpdating(manager);
+        InvokeInit(manager);
     }
 
     private void ReadComponentData(PlaygroundManager manager)
@@ -48,14 +50,14 @@ public sealed class Entity : MonoBehaviour
             }
             else
             {
-                _components.Add((EntityComponent)JsonUtility.FromJson(data[i], componentType));
+                _components.Add((EntityNode)JsonUtility.FromJson(data[i], componentType));
             }
         }
     }
 
     private void InvokeBaseInit(PlaygroundManager manager)
     {
-        var baseInit = manager.GetCachedComponentMethod(typeof(EntityComponent), Methods.Init);
+        var baseInit = manager.GetCachedComponentMethod(typeof(EntityNode), Methods.Init);
 
         for (int i = 0; i < _components.Count; i++)
         {
@@ -78,7 +80,7 @@ public sealed class Entity : MonoBehaviour
         }
     }
 
-    private void SetupUpdating(PlaygroundManager manager)
+    private void AssignMethodCalls(PlaygroundManager manager)
     {
         var methodsList = new List<Methods>();
 
@@ -110,6 +112,25 @@ public sealed class Entity : MonoBehaviour
                             _updates += (Action<float>)Delegate.CreateDelegate(typeof(Action<float>), _components[i], update);
                         }
                         break;
+
+                    case Methods.OnNodeAdd:
+                        var add = manager.GetCachedComponentMethod(_components[i].GetType(), Methods.OnNodeAdd);
+
+                        if (add != null)
+                        {
+                            _onNodeAdd += (Action<EntityNode>)Delegate.CreateDelegate(typeof(Action<EntityNode>), _components[i], add);
+                        }
+                        break;
+
+                    case Methods.OnNodeRemove:
+                        var remove = manager.GetCachedComponentMethod(_components[i].GetType(), Methods.OnNodeRemove);
+
+                        if (remove != null)
+                        {
+                            _onNodeRemove += (Action<EntityNode>)Delegate.CreateDelegate(typeof(Action<EntityNode>), _components[i], remove);
+                        }
+
+                        break;
                 }
             }
         }
@@ -118,5 +139,10 @@ public sealed class Entity : MonoBehaviour
     private void Update()
     {
         _updates?.Invoke(Time.deltaTime);
+    }
+
+    public void AddNode(EntityNode node)
+    {
+        _onNodeAdd?.Invoke(node);
     }
 }

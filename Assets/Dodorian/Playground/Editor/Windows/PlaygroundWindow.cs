@@ -2,17 +2,17 @@
 using UnityEditor;
 using UnityEngine;
 
-public class PlagroundWindow : EditorWindow
+public class PlaygroundWindow : EditorWindow
 {
     private int _chosenTree = 0;
     private GUIStyle _nodeStyle;
     private PlaygroundManager _playground;
-    private static PlagroundWindow _instance;
+    private static PlaygroundWindow _instance;
 
     [MenuItem("Window/Playground")]
     private static void OpenWindow()
     {
-        _instance = GetWindow<PlagroundWindow>();
+        _instance = GetWindow<PlaygroundWindow>();
         _instance.titleContent = new GUIContent("Playground Editor");
     }
 

@@ -91,3 +91,15 @@ MonoBehaviour:
         m_StretchWidth: 1
         m_StretchHeight: 0
       _IsDragged: 0
+  _setupAssets:
+    _entitySetupAssets:
+    - {fileID: 4900000, guid: 123a14a8b8f2b044d9da88a02d90deee, type: 3}
+    _entityNames:
+    - TestSetup
+    _entitySetups:
+    - "InputNode|{\n    \"_inputCommands\": [\n        {\n            \"_CommandName\":
+      \"Jump\",\n            \"_ContinuousInput\": false,\n            \"_ActivationKey\":
+      119\n        },\n        {\n            \"_CommandName\": \"Right\",\n            \"_ContinuousInput\":
+      true,\n            \"_ActivationKey\": 100\n        },\n        {\n            \"_CommandName\":
+      \"Left\",\n            \"_ContinuousInput\": true,\n            \"_ActivationKey\":
+      97\n        }\n    ]\n}"

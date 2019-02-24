@@ -1,0 +1,19 @@
+InputNode|{
+    "_inputCommands": [
+        {
+            "_CommandName": "Jump",
+            "_ContinuousInput": false,
+            "_ActivationKey": 119
+        },
+        {
+            "_CommandName": "Right",
+            "_ContinuousInput": true,
+            "_ActivationKey": 100
+        },
+        {
+            "_CommandName": "Left",
+            "_ContinuousInput": true,
+            "_ActivationKey": 97
+        }
+    ]
+}
